@@ -38,7 +38,7 @@ func GetCustomer() ([]model.Customer, error) {
 	rows, err := db.Query("SELECT customerid, code, customername, email, address, phone, city, country FROM customer")
 
 	if err != nil {
-		return nil, fmt.Errorf("Get: %v", err)
+		return nil, fmt.Errorf("%s: %w", "Get", err)
 	}
 
 	defer rows.Close()
@@ -49,13 +49,13 @@ func GetCustomer() ([]model.Customer, error) {
 
 		if err := rows.Scan(&cust.CustomerId, &cust.Code, &cust.CustomerName,
 			&cust.Email, &cust.Address, &cust.Phone, &cust.City, &cust.Country); err != nil {
-			return nil, fmt.Errorf("Get: %v", err)
+			return nil, fmt.Errorf("%s: %w", "Get", err)
 		}
 		customers = append(customers, cust)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("Get:%v", err)
+		return nil, fmt.Errorf("%s: %w", "Get", err)
 	}
 
 	return customers, nil
@@ -69,19 +69,28 @@ func AddCustomer(customer model.Customer) error {
 
 	if cust.Code != "" {
 		log.Println(err)
-		return fmt.Errorf("Add: Customer %s already exists", cust.CustomerName)
+		return fmt.Errorf("%s: %s", "Add: Customer already exists", cust.CustomerName)
 	}
 
 	db := ConnectToDb()
 
-	_, err = db.Exec("INSERT INTO customer (code, customername, email, address, phone, city, country, createdat) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())",
+	tx, err := db.Begin()
+
+	if err != nil {
+		return fmt.Errorf("%s: %w", "Add", err)
+	}
+
+	_, err = tx.Exec("INSERT INTO customer (code, customername, email, address, phone, city, country, createdat) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())",
 		customer.Code, customer.CustomerName, customer.Email, customer.Address, customer.Phone, customer.City, customer.Country)
 
 	defer db.Close()
 
 	if err != nil {
-		return fmt.Errorf("Add: %v", err)
+		tx.Rollback()
+		return fmt.Errorf("%s: %w", "Add", err)
 	}
+
+	tx.Commit()
 
 	return nil
 }
@@ -94,7 +103,7 @@ func UpdateCustomer(customer model.Customer) error {
 
 	if err != nil {
 		log.Println(cust)
-		return fmt.Errorf("Update: %v", err)
+		return fmt.Errorf("%s: %w", "Update", err)
 	}
 
 	db := ConnectToDb()
@@ -105,7 +114,7 @@ func UpdateCustomer(customer model.Customer) error {
 	defer db.Close()
 
 	if err != nil {
-		return fmt.Errorf("Update: %v", err)
+		return fmt.Errorf("%s: %w", "Update", err)
 	}
 
 	return nil
@@ -119,7 +128,7 @@ func DeleteCustomer(id string) error {
 
 	if err != nil {
 		log.Println(cust)
-		return fmt.Errorf("Delete: %v", err)
+		return fmt.Errorf("%s: %w", "Delete", err)
 	}
 
 	db := ConnectToDb()
@@ -129,7 +138,7 @@ func DeleteCustomer(id string) error {
 	defer db.Close()
 
 	if err != nil {
-		return fmt.Errorf("Delete: %v", err)
+		return fmt.Errorf("%s: %w", "Delete", err)
 	}
 
 	return nil
