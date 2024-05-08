@@ -74,6 +74,8 @@ func AddCustomer(customer model.Customer) error {
 
 	db := ConnectToDb()
 
+	defer db.Close()
+
 	tx, err := db.Begin()
 
 	if err != nil {
@@ -82,8 +84,6 @@ func AddCustomer(customer model.Customer) error {
 
 	_, err = tx.Exec("INSERT INTO customer (code, customername, email, address, phone, city, country, createdat) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())",
 		customer.Code, customer.CustomerName, customer.Email, customer.Address, customer.Phone, customer.City, customer.Country)
-
-	defer db.Close()
 
 	if err != nil {
 		tx.Rollback()
@@ -108,14 +108,23 @@ func UpdateCustomer(customer model.Customer) error {
 
 	db := ConnectToDb()
 
-	_, err = db.Exec("UPDATE customer SET customername = $2, email = $3, address = $4, phone = $5, city = $6, country = $7, modifiedat = NOW() WHERE code = $1",
-		customer.Code, customer.CustomerName, customer.Email, customer.Address, customer.Phone, customer.City, customer.Country)
-
 	defer db.Close()
+
+	tx, err := db.Begin()
 
 	if err != nil {
 		return fmt.Errorf("%s: %w", "Update", err)
 	}
+
+	_, err = tx.Exec("UPDATE customer SET customername = $2, email = $3, address = $4, phone = $5, city = $6, country = $7, modifiedat = NOW() WHERE code = $1",
+		customer.Code, customer.CustomerName, customer.Email, customer.Address, customer.Phone, customer.City, customer.Country)
+
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("%s: %w", "Update", err)
+	}
+
+	tx.Commit()
 
 	return nil
 }
@@ -133,13 +142,22 @@ func DeleteCustomer(id string) error {
 
 	db := ConnectToDb()
 
-	_, err = db.Exec("DELETE FROM customer WHERE code = $1", id)
-
 	defer db.Close()
+
+	tx, err := db.Begin()
 
 	if err != nil {
 		return fmt.Errorf("%s: %w", "Delete", err)
 	}
+
+	_, err = tx.Exec("DELETE FROM customer WHERE code = $1", id)
+
+	if err != nil {
+		tx.Rollback()
+		return fmt.Errorf("%s: %w", "Delete", err)
+	}
+
+	tx.Commit()
 
 	return nil
 }

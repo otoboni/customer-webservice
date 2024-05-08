@@ -12,5 +12,6 @@ func main() {
 	router.POST("/customer", service.AddCustomer)
 	router.PUT("/customer", service.UpdateCustomer)
 	router.DELETE("/customer", service.DeleteCustomer)
+	router.POST("/login", service.Login)
 	router.Run(":3000")
 }
