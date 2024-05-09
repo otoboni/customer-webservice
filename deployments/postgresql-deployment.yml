@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgresql-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql-deployment
+  template:
+    metadata:
+      labels:
+        app: postgresql-deployment
+    spec:
+      containers:
+      - name: ctr-postgresql
+        image: localhost:5000/customer-postgresql:latest
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: "customers"
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "123456"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql-service
+spec:
+  selector:
+    app: postgresql-deployment
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
