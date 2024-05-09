@@ -1,0 +1,8 @@
+Local Repository
+
+docker run -d -p 5000:5000 --restart=always --name registry registry:2
+
+docker tag customer-webservice:latest localhost:5000/customer-webservice:latest
+docker push localhost:5000/customer-webservice:latest
+
+Utilizar a imagem deste repositório
