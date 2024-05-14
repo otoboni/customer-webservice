@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: customer-webservice
+  namespace: default
 spec:
   replicas: 2
   strategy:
@@ -19,7 +20,7 @@ spec:
     spec:
       containers:
       - name: ctr-customer
-        image: localhost:5000/customer-webservice:latest
+        image: us-phoenix-1.ocir.io/grpi1rdiczld/customer:latest
         imagePullPolicy: IfNotPresent
         resources:
           limits:

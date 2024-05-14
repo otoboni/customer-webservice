@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: postgresql-deployment
+  namespace: default
 spec:
   replicas: 1
   selector:
@@ -14,7 +15,7 @@ spec:
     spec:
       containers:
       - name: ctr-postgresql
-        image: localhost:5000/customer-postgresql:latest
+        image: us-phoenix-1.ocir.io/grpi1rdiczld/postgresql:latest
         ports:
         - containerPort: 5432
         env:
